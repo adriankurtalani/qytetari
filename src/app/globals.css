@@ -1,26 +1,165 @@
 @import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f1f5f9;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --primary: #1d4ed8;
+  --primary-hover: #1e40af;
+  --primary-light: #dbeafe;
+  --muted: #64748b;
+  --border: #e2e8f0;
+  --radius: 0.75rem;
+  --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(15 23 42 / 0.08), 0 4px 6px -4px rgb(15 23 42 / 0.06);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  min-height: 100dvh;
+}
+
+::selection {
+  background: var(--primary-light);
+  color: var(--primary-hover);
+}
+
+/* Layout utilities */
+.page-container {
+  @apply mx-auto w-full min-w-0 max-w-7xl px-3.5 sm:px-6 lg:px-8;
+}
+
+.page-container-narrow {
+  @apply mx-auto w-full min-w-0 max-w-3xl px-3.5 sm:px-6;
+}
+
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-top {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+
+/* Card */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-hover {
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+
+.card-hover:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: #cbd5e1;
+}
+
+@media (hover: none) {
+  .card-hover:active {
+    box-shadow: var(--shadow-md);
+    transform: none;
+  }
+}
+
+/* Hero gradient */
+.hero-gradient {
+  background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+}
+
+/* Form fields */
+.input-field {
+  @apply w-full min-w-0 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-base sm:text-sm text-slate-900 placeholder:text-slate-400 transition-colors;
+  @apply focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Map markers */
+.precise-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.precise-marker-pin {
+  position: relative;
+  width: 28px;
+  height: 28px;
+}
+
+.precise-marker-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  background: var(--pin-color, #dc2626);
+  border: 3px solid white;
+  border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+
+.precise-marker-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  background: var(--pin-color, #dc2626);
+  border-radius: 50%;
+  opacity: 0.25;
+  animation: marker-pulse 2s ease-out infinite;
+  z-index: 1;
+}
+
+@keyframes marker-pulse {
+  0% { transform: scale(0.5); opacity: 0.4; }
+  70% { transform: scale(1.2); opacity: 0; }
+  100% { transform: scale(1.2); opacity: 0; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out forwards;
 }

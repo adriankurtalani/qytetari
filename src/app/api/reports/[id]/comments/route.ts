@@ -4,6 +4,7 @@ import { moderateComment } from '@/lib/ai-moderation';
 import { checkIPBan, banIP, getBannedWords } from '@/lib/ip-ban';
 import { createNotification } from '@/lib/notifications';
 import { getClientIP } from '@/lib/utils';
+import { recalculateCitizenTrust } from '@/lib/citizen-trust';
 
 export async function GET(
   _request: NextRequest,
@@ -124,6 +125,8 @@ export async function POST(
       `/reports/${id}`
     );
   }
+
+  await recalculateCitizenTrust(serviceClient, user.id);
 
   return NextResponse.json(comment);
 }

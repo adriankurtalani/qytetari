@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Toast } from '@/components/ui/Toast';
 import { LocationPicker, type LocationValue } from '@/components/map/LocationPicker';
-import { KOSOVO_CITIES, MAX_PHOTOS_PER_REPORT, MODERATION_MESSAGE } from '@/lib/constants';
+import { KOSOVO_CITIES, MAX_PHOTOS_PER_REPORT, MODERATION_MESSAGE, PHOTO_UPLOAD_GUIDE } from '@/lib/constants';
 import { generateAnonymousId } from '@/lib/utils';
 import type { Category } from '@/lib/types';
 
@@ -202,8 +202,8 @@ export function ReportForm({ categories, isLoggedIn, isAnonymous }: ReportFormPr
           </label>
           <div className="flex flex-wrap gap-3">
             {photoPreviews.map((preview, i) => (
-              <div key={i} className="relative h-24 w-24 rounded-xl overflow-hidden border-2 border-slate-200 shadow-sm">
-                <img src={preview} alt="" className="h-full w-full object-cover" />
+              <div key={i} className="relative h-28 w-28 rounded-xl overflow-hidden border-2 border-slate-200 shadow-sm bg-slate-100">
+                <img src={preview} alt={`Parapamje foto ${i + 1}`} className="h-full w-full object-contain p-0.5" />
                 <button
                   type="button"
                   onClick={() => removePhoto(i)}
@@ -217,7 +217,7 @@ export function ReportForm({ categories, isLoggedIn, isAnonymous }: ReportFormPr
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="flex h-24 w-24 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                className="flex h-28 w-28 items-center justify-center rounded-xl border-2 border-dashed border-slate-300 text-slate-400 hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-colors"
               >
                 <Camera className="h-6 w-6" />
               </button>
@@ -233,7 +233,7 @@ export function ReportForm({ categories, isLoggedIn, isAnonymous }: ReportFormPr
             disabled={photos.length >= MAX_PHOTOS_PER_REPORT}
           />
           <p className="mt-2 text-xs text-slate-500">
-            {photos.length}/{MAX_PHOTOS_PER_REPORT} foto të ngarkuara
+            {photos.length}/{MAX_PHOTOS_PER_REPORT} foto të ngarkuara · rekomandohet {PHOTO_UPLOAD_GUIDE.recommendedPx.width}×{PHOTO_UPLOAD_GUIDE.recommendedPx.height}px ({PHOTO_UPLOAD_GUIDE.aspectRatio}), foto e plotë pa prerje
           </p>
         </div>
         </section>

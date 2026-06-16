@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { MapPageClient } from '@/components/map/MapPageClient';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card } from '@/components/ui/Card';
+import { PUBLIC_REPORT_STATUSES } from '@/lib/constants';
 
 export default async function MapPage() {
   const supabase = await createClient();
@@ -10,7 +11,7 @@ export default async function MapPage() {
     supabase
       .from('reports')
       .select('*, category:categories(*)')
-      .in('status', ['approved', 'in_progress', 'resolved']),
+      .in('status', PUBLIC_REPORT_STATUSES),
     supabase.from('categories').select('*').eq('is_active', true),
   ]);
 

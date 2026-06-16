@@ -46,6 +46,7 @@ export const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {
   approved: 'Aprovuar',
   rejected: 'Refuzuar',
   in_progress: 'Në Proces',
+  waiting_for_response: 'Në Pritje të Përgjigjes',
   resolved: 'Zgjidhur',
 };
 
@@ -54,8 +55,27 @@ export const REPORT_STATUS_COLORS: Record<ReportStatus, string> = {
   approved: 'bg-green-100 text-green-800',
   rejected: 'bg-red-100 text-red-800',
   in_progress: 'bg-blue-100 text-blue-800',
+  waiting_for_response: 'bg-purple-100 text-purple-800',
   resolved: 'bg-emerald-100 text-emerald-800',
 };
+
+/** Statuses visible on public feed, map, and search */
+export const PUBLIC_REPORT_STATUSES: ReportStatus[] = [
+  'approved',
+  'in_progress',
+  'waiting_for_response',
+  'resolved',
+];
+
+/** Ordered workflow for admin status picker */
+export const WORKFLOW_STATUSES: ReportStatus[] = [
+  'pending_review',
+  'approved',
+  'in_progress',
+  'waiting_for_response',
+  'resolved',
+  'rejected',
+];
 
 export const MODERATION_MESSAGE =
   'Raportimi juaj është duke u konfirmuar nga ekipi ynë. Do të vendoset nëse do të publikohet publikisht brenda 10-20 minutave.';
@@ -103,3 +123,17 @@ export const CITY_COORDINATES: Record<string, [number, number]> = {
 
 export const MAX_PHOTOS_PER_REPORT = 6;
 export const MAX_PHOTO_SIZE_MB = 5;
+
+/** Recommended upload dimensions for report photos (mobile-first). */
+export const PHOTO_UPLOAD_GUIDE = {
+  /** Ideal aspect ratio for consistent feed/detail layout */
+  aspectRatio: '4:3' as const,
+  /** Recommended width × height in pixels */
+  recommendedPx: { width: 1200, height: 900 },
+  /** Portrait alternative (common on phones) */
+  portraitPx: { width: 1080, height: 1440 },
+  /** Minimum longest edge before quality loss on large screens */
+  minLongEdgePx: 800,
+  /** Max width served in detail/lightbox */
+  displayMaxWidthPx: 1200,
+};

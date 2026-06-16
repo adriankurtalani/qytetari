@@ -25,10 +25,20 @@ export default function LoginPage() {
 
     if (error) {
       setToast({ message: error.message, type: 'error' });
-    } else {
-      router.push('/');
-      router.refresh();
+      setLoading(false);
+      return;
     }
+
+    await router.refresh();
+
+    const params = new URLSearchParams(window.location.search);
+    const redirect = params.get('redirect');
+    const destination =
+      redirect && redirect.startsWith('/') && !redirect.startsWith('//')
+        ? redirect
+        : '/';
+
+    router.replace(destination);
     setLoading(false);
   }
 

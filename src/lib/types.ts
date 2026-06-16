@@ -1,5 +1,13 @@
 export type UserRole = 'citizen' | 'business' | 'municipality' | 'admin';
-export type ReportStatus = 'pending_review' | 'approved' | 'rejected' | 'in_progress' | 'resolved';
+export type ReportStatus =
+  | 'pending_review'
+  | 'approved'
+  | 'rejected'
+  | 'in_progress'
+  | 'waiting_for_response'
+  | 'resolved';
+
+export type TimelineActorRole = 'citizen' | 'admin' | 'municipality' | 'business' | 'system';
 export type VoteType = 'support' | 'disagree';
 export type BanType = 'temporary' | 'permanent';
 export type SubscriptionTier = 'free' | 'verified' | 'premium';
@@ -8,7 +16,11 @@ export type NotificationType =
   | 'report_rejected'
   | 'new_comment'
   | 'status_changed'
-  | 'business_response';
+  | 'business_response'
+  | 'business_claim_approved'
+  | 'business_claim_rejected';
+
+export type BusinessClaimStatus = 'unclaimed' | 'pending_claim' | 'verified' | 'rejected';
 
 export interface Profile {
   id: string;
@@ -20,6 +32,10 @@ export interface Profile {
   anonymous_mode: boolean;
   role: UserRole;
   is_verified: boolean;
+  citizen_score: number;
+  approved_reports_count: number;
+  rejected_reports_count: number;
+  citizen_activity_points: number;
   created_at: string;
   updated_at: string;
 }
@@ -90,13 +106,24 @@ export interface Business {
   id: string;
   owner_id: string | null;
   name: string;
+  slug: string;
   description: string | null;
   logo_url: string | null;
   city: string | null;
   is_verified: boolean;
   subscription_tier: SubscriptionTier;
   reputation_score: number;
+  claim_status: BusinessClaimStatus;
+  normalized_name: string | null;
+  official_email: string | null;
+  fiscal_number: string | null;
+  certificate_url: string | null;
+  claim_submitted_at: string | null;
+  claim_submitted_by: string | null;
+  claim_rejection_reason: string | null;
+  report_count: number;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface BusinessResponse {
@@ -179,3 +206,16 @@ export interface SiteSettings {
 export type SiteSettingsUpdate = Partial<
   Omit<SiteSettings, 'id' | 'updated_at' | 'updated_by'>
 >;
+
+export interface ReportTimelineEvent {
+  id: string;
+  report_id: string;
+  event_type: string;
+  status: ReportStatus | null;
+  title: string;
+  description: string | null;
+  actor_id: string | null;
+  actor_role: TimelineActorRole;
+  created_at: string;
+  actor?: Pick<Profile, 'full_name' | 'username'> | null;
+}

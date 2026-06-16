@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getCanonicalCity } from '@/lib/city-utils';
+import { recalculateCitizenTrust } from '@/lib/citizen-trust';
 
 async function verifyAdmin() {
   const supabase = await createClient();
@@ -74,12 +76,13 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
-  const { userId, role, is_verified } = await request.json();
+  const { userId, role, is_verified, city } = await request.json();
   const serviceClient = createServiceClient();
 
   const updates: Record<string, unknown> = {};
   if (role) updates.role = role;
   if (is_verified !== undefined) updates.is_verified = is_verified;
+  if (city !== undefined) updates.city = city ? getCanonicalCity(city) : null;
 
   const { error } = await serviceClient
     .from('profiles')
@@ -88,6 +91,10 @@ export async function PATCH(request: NextRequest) {
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  if (is_verified !== undefined) {
+    await recalculateCitizenTrust(serviceClient, userId);
   }
 
   return NextResponse.json({ success: true });

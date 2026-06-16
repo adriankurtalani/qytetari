@@ -11,7 +11,14 @@ import { BackLink } from '@/components/ui/BackLink';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { formatDate } from '@/lib/utils';
+import { KOSOVO_CITIES } from '@/lib/constants';
 import type { Profile, UserRole } from '@/lib/types';
+import { getCitizenTrustDisplay, renderTrustStars } from '@/lib/citizen-trust';
+
+const cityOptions = [
+  { value: '', label: '— Pa qytet —' },
+  ...KOSOVO_CITIES.map((c) => ({ value: c, label: c })),
+];
 
 export default function AdminUsersPage() {
   const router = useRouter();
@@ -31,7 +38,10 @@ export default function AdminUsersPage() {
     load();
   }, [router]);
 
-  async function updateUser(userId: string, updates: { role?: UserRole; is_verified?: boolean }) {
+  async function updateUser(
+    userId: string,
+    updates: { role?: UserRole; is_verified?: boolean; city?: string }
+  ) {
     await fetch('/api/admin/users', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -81,9 +91,13 @@ export default function AdminUsersPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-3 text-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-slate-500 shrink-0">Qyteti</span>
-                    <span className="text-slate-700 truncate text-right">{user.city || '-'}</span>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-slate-500 shrink-0 text-xs">Qyteti / Rajoni</span>
+                    <Select
+                      options={cityOptions}
+                      value={user.city || ''}
+                      onChange={(e) => updateUser(user.id, { city: e.target.value })}
+                    />
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-slate-500 shrink-0">Roli</span>
@@ -98,6 +112,17 @@ export default function AdminUsersPage() {
                       onChange={(e) => updateUser(user.id, { role: e.target.value as UserRole })}
                       className="w-full max-w-[160px]"
                     />
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-slate-500 shrink-0">Citizen Score</span>
+                    {user.role === 'citizen' ? (
+                      <span className="text-xs font-medium text-amber-800">
+                        {renderTrustStars(getCitizenTrustDisplay({ citizen_score: user.citizen_score ?? 50 }).stars)}{' '}
+                        {user.citizen_score ?? 50}/100
+                      </span>
+                    ) : (
+                      <span className="text-xs text-slate-400">—</span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between gap-3">
                     <span className="text-slate-500">Verifikuar</span>
@@ -129,6 +154,7 @@ export default function AdminUsersPage() {
                     <th className="text-left p-4 font-semibold text-slate-600">Email</th>
                     <th className="text-left p-4 font-semibold text-slate-600">Qyteti</th>
                     <th className="text-left p-4 font-semibold text-slate-600">Roli</th>
+                    <th className="text-left p-4 font-semibold text-slate-600">Citizen Score</th>
                     <th className="text-left p-4 font-semibold text-slate-600">Verifikuar</th>
                     <th className="text-left p-4 font-semibold text-slate-600">Regjistruar</th>
                   </tr>
@@ -152,7 +178,14 @@ export default function AdminUsersPage() {
                         </div>
                       </td>
                       <td className="p-4 text-slate-600 max-w-[200px] truncate">{user.email || '-'}</td>
-                      <td className="p-4 text-slate-600">{user.city || '-'}</td>
+                      <td className="p-4">
+                        <Select
+                          options={cityOptions}
+                          value={user.city || ''}
+                          onChange={(e) => updateUser(user.id, { city: e.target.value })}
+                          className="w-40"
+                        />
+                      </td>
                       <td className="p-4">
                         <Select
                           options={[
@@ -165,6 +198,16 @@ export default function AdminUsersPage() {
                           onChange={(e) => updateUser(user.id, { role: e.target.value as UserRole })}
                           className="w-36"
                         />
+                      </td>
+                      <td className="p-4">
+                        {user.role === 'citizen' ? (
+                          <span className="text-xs font-medium text-amber-800 whitespace-nowrap">
+                            {renderTrustStars(getCitizenTrustDisplay({ citizen_score: user.citizen_score ?? 50 }).stars)}{' '}
+                            {user.citizen_score ?? 50}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
                       </td>
                       <td className="p-4">
                         <Button

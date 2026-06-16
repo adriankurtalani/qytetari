@@ -1,19 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceClient } from '@/lib/supabase/server';
-
-async function verifyAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  return profile?.role === 'admin' ? user : null;
-}
+import { createServiceClient } from '@/lib/supabase/server';
+import { verifyAdmin } from '@/lib/admin-auth';
+import { roleToTimelineActor, updateReportStatus } from '@/lib/report-status';
+import type { ReportStatus } from '@/lib/types';
 
 export async function GET(request: NextRequest) {
   const admin = await verifyAdmin();
@@ -22,11 +11,11 @@ export async function GET(request: NextRequest) {
   }
 
   const status = new URL(request.url).searchParams.get('status') || 'pending_review';
-  const serviceClient = await createServiceClient();
+  const serviceClient = createServiceClient();
 
   const { data, error } = await serviceClient
     .from('reports')
-    .select('*, category:categories(*), photos:report_photos(*), profile:profiles(username, full_name)')
+    .select('*, category:categories(*), photos:report_photos(*), profile:profiles(username, full_name, citizen_score, approved_reports_count, rejected_reports_count)')
     .eq('status', status)
     .order('created_at', { ascending: false });
 
@@ -44,15 +33,17 @@ export async function PATCH(request: NextRequest) {
   }
 
   const { reportId, status } = await request.json();
-  const serviceClient = await createServiceClient();
+  const serviceClient = createServiceClient();
 
-  const { error } = await serviceClient
-    .from('reports')
-    .update({ status })
-    .eq('id', reportId);
+  const result = await updateReportStatus(serviceClient, {
+    reportId,
+    newStatus: status as ReportStatus,
+    actorId: admin.id,
+    actorRole: 'admin',
+  });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!result.success) {
+    return NextResponse.json({ error: result.error }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

@@ -35,10 +35,18 @@ Run **all** migrations in order via Supabase **SQL Editor**:
 3. `supabase/migrations/003_storage_policies.sql`
 4. `supabase/migrations/004_add_profile_email.sql`
 5. `supabase/migrations/005_site_settings.sql`
+6. `supabase/migrations/006_business_claim_system.sql`
+7. `supabase/migrations/007_resolution_workflow.sql` — **run alone first** (adds enum value)
+8. `supabase/migrations/008_resolution_workflow.sql` — run immediately after 007 (timeline + RLS)
+9. `supabase/migrations/009_business_slugs.sql` — public profile URLs (`/businesses/restaurant-abc`)
+
+No extra migration needed for municipality portal — uses `profiles.city` as jurisdiction.
 
 ### 4. Supabase Storage
 
 Create a **public** bucket named `report-photos` in Supabase Storage.
+
+Create a **private** bucket named `business-documents` for business claim certificates (required for migration 006).
 
 ### 5. Create an admin user
 

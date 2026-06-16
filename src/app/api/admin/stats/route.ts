@@ -1,22 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { notifyReportStatusChange } from '@/lib/notifications';
-
-async function verifyAdmin() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return null;
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') return null;
-  return user;
-}
+import { createServiceClient } from '@/lib/supabase/server';
+import { verifyAdmin } from '@/lib/admin-auth';
+import { updateReportStatus } from '@/lib/report-status';
+import type { ReportStatus } from '@/lib/types';
 
 export async function GET() {
   const admin = await verifyAdmin();
@@ -24,7 +10,7 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
   }
 
-  const serviceClient = await createServiceClient();
+  const serviceClient = createServiceClient();
 
   const [
     { count: totalReports },
@@ -79,21 +65,17 @@ export async function PATCH(request: NextRequest) {
   }
 
   const { reportId, status } = await request.json();
-  const serviceClient = await createServiceClient();
+  const serviceClient = createServiceClient();
 
-  const { data: report, error } = await serviceClient
-    .from('reports')
-    .update({ status })
-    .eq('id', reportId)
-    .select('user_id')
-    .single();
+  const result = await updateReportStatus(serviceClient, {
+    reportId,
+    newStatus: status as ReportStatus,
+    actorId: admin.id,
+    actorRole: 'admin',
+  });
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  if (report?.user_id) {
-    await notifyReportStatusChange(report.user_id, reportId, status);
+  if (!result.success) {
+    return NextResponse.json({ error: result.error }, { status: 500 });
   }
 
   return NextResponse.json({ success: true });

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Bell, CheckCheck, FileText, MessageSquare, Building2 } from 'lucide-react';
+import { Bell, CheckCheck, FileText, MessageSquare, Building2, ShieldCheck, ShieldX } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -18,6 +18,8 @@ const TYPE_ICONS: Record<NotificationType, React.ComponentType<{ className?: str
   new_comment: MessageSquare,
   status_changed: FileText,
   business_response: Building2,
+  business_claim_approved: ShieldCheck,
+  business_claim_rejected: ShieldX,
 };
 
 export default function NotificationsPage() {

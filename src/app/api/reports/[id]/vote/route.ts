@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { checkIPBan, banIP } from '@/lib/ip-ban';
 import { getClientIP } from '@/lib/utils';
+import { recalculateCitizenTrust } from '@/lib/citizen-trust';
 
 export async function POST(
   request: NextRequest,
@@ -45,6 +46,7 @@ export async function POST(
     existingVote = data;
   }
 
+  let isNewVote = false;
   if (existingVote) {
     if (existingVote.vote_type === vote_type) {
       return NextResponse.json({ error: 'Keni votuar tashmë' }, { status: 400 });
@@ -73,6 +75,11 @@ export async function POST(
       await banIP(ip, 'Përpjekje e dyfishtë për votim');
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+    isNewVote = true;
+  }
+
+  if (user && isNewVote) {
+    await recalculateCitizenTrust(serviceClient, user.id);
   }
 
   const { data: report } = await serviceClient

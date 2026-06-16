@@ -3,22 +3,31 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Building2, Star, MessageSquare, CheckCircle, Eye } from 'lucide-react';
+import {
+  Building2,
+  Star,
+  MessageSquare,
+  CheckCircle,
+  Eye,
+  Clock,
+  ArrowRight,
+  Search,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { StatCard } from '@/components/ui/StatCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { REPORT_STATUS_LABELS, REPORT_STATUS_COLORS, KOSOVO_CITIES } from '@/lib/constants';
+import { REPORT_STATUS_LABELS, REPORT_STATUS_COLORS } from '@/lib/constants';
+import { CLAIM_STATUS_LABELS } from '@/lib/business-claim';
 import { formatRelativeDate, cn } from '@/lib/utils';
 import type { Business, Report } from '@/lib/types';
 
 interface BusinessData {
   business: Business | null;
+  pendingClaim: Business | null;
   reports: Report[];
   metrics: {
     totalReports: number;
@@ -33,7 +42,6 @@ export default function BusinessDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [responseText, setResponseText] = useState('');
-  const [createForm, setCreateForm] = useState({ name: '', description: '', city: '' });
 
   useEffect(() => {
     loadData();
@@ -47,16 +55,6 @@ export default function BusinessDashboardPage() {
     }
     if (res.ok) setData(await res.json());
     setLoading(false);
-  }
-
-  async function createBusiness(e: React.FormEvent) {
-    e.preventDefault();
-    const res = await fetch('/api/business', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'create_business', ...createForm }),
-    });
-    if (res.ok) loadData();
   }
 
   async function respondToReport(reportId: string) {
@@ -85,13 +83,40 @@ export default function BusinessDashboardPage() {
 
   if (loading) return <LoadingSpinner />;
 
+  if (data?.pendingClaim && !data.business) {
+    const pending = data.pendingClaim;
+    return (
+      <div className="page-container-narrow py-6 sm:py-10 animate-fade-in">
+        <PageHeader
+          badge="Biznes"
+          title="Kërkesa në Pritje"
+          description={`Verifikimi për "${pending.name}" po shqyrtohet nga ekipi ynë.`}
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50">
+            <Clock className="h-6 w-6 text-amber-600" />
+          </div>
+        </PageHeader>
+
+        <Card className="mt-8" padding="md">
+          <Badge className="bg-amber-100 text-amber-800 mb-4">
+            {CLAIM_STATUS_LABELS.pending_claim}
+          </Badge>
+          <p className="text-slate-600 text-sm leading-relaxed">
+            Do të njoftoheni brenda 1-3 ditëve pune pasi administrata të shqyrtojë certifikatën,
+            emailin zyrtar dhe numrin fiskal. Pas aprovimit, do të keni qasje në panelin e biznesit.
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   if (!data?.business) {
     return (
       <div className="page-container-narrow py-6 sm:py-10 animate-fade-in">
         <PageHeader
           badge="Biznes"
-          title="Krijo Profilin e Biznesit"
-          description="Verifikoni pronësinë dhe menaxhoni reputacionin tuaj në platformë."
+          title="Verifikoni Biznesin Tuaj"
+          description="Gjeni biznesin tuaj në listë dhe dorëzoni dokumentacionin për verifikim."
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50">
             <Building2 className="h-6 w-6 text-indigo-600" />
@@ -99,32 +124,26 @@ export default function BusinessDashboardPage() {
         </PageHeader>
 
         <Card className="mt-8" padding="md">
-          <form onSubmit={createBusiness} className="space-y-5">
-            <Input
-              label="Emri i Biznesit"
-              value={createForm.name}
-              onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
-              required
-            />
-            <Input
-              label="Përshkrimi"
-              value={createForm.description}
-              onChange={(e) => setCreateForm({ ...createForm, description: e.target.value })}
-            />
-            <Select
-              label="Qyteti"
-              options={[
-                { value: '', label: 'Zgjidhni qytetin' },
-                ...KOSOVO_CITIES.map((c) => ({ value: c, label: c })),
-              ]}
-              value={createForm.city}
-              onChange={(e) => setCreateForm({ ...createForm, city: e.target.value })}
-              required
-            />
-            <Button type="submit" className="w-full" size="lg">
-              Krijo Profilin
+          <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
+            <p>
+              Kur qytetarët raportojnë një biznes (p.sh. &quot;Restaurant X&quot;), sistemi krijon
+              automatikisht një <strong>biznes pa pronar</strong>. Ju si pronar mund ta
+              verifikoni duke dorëzuar:
+            </p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Certifikatën e biznesit</li>
+              <li>Email zyrtar</li>
+              <li>Numrin fiskal (NUI)</li>
+            </ul>
+          </div>
+
+          <Link href="/businesses" className="block mt-6">
+            <Button size="lg" className="w-full gap-2">
+              <Search className="h-4 w-4" />
+              Kërko & Claim Business
+              <ArrowRight className="h-4 w-4" />
             </Button>
-          </form>
+          </Link>
         </Card>
       </div>
     );

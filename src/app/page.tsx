@@ -6,6 +6,7 @@ import { ReportCard } from '@/components/reports/ReportCard';
 import { ReportFilters } from '@/components/reports/ReportFilters';
 import { Button } from '@/components/ui/Button';
 import { getSiteSettings, getHeroTitle, getHeroDescription } from '@/lib/site-settings';
+import { PUBLIC_REPORT_STATUSES } from '@/lib/constants';
 import type { FeedSort } from '@/lib/types';
 
 interface HomeProps {
@@ -29,7 +30,7 @@ export default async function HomePage({ searchParams }: HomeProps) {
   let query = supabase
     .from('reports')
     .select('*, category:categories(*), photos:report_photos(*)')
-    .in('status', ['approved', 'in_progress', 'resolved']);
+    .in('status', PUBLIC_REPORT_STATUSES);
 
   if (params.city) query = query.eq('city', params.city);
   if (params.status) query = query.eq('status', params.status);

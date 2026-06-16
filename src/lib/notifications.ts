@@ -40,6 +40,11 @@ export async function notifyReportStatusChange(
       message: 'Raportimi juaj po trajtohet aktualisht.',
       type: 'status_changed',
     },
+    waiting_for_response: {
+      title: 'Në Pritje të Përgjigjes',
+      message: 'Raportimi juaj pret përgjigje nga biznesi ose institucioni.',
+      type: 'status_changed',
+    },
     resolved: {
       title: 'Raportimi u Zgjidh',
       message: 'Raportimi juaj është shënuar si i zgjidhur.',

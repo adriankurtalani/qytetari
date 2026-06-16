@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { moderateContent } from '@/lib/ai-moderation';
 import { checkIPBan, banIP, getBannedWords } from '@/lib/ip-ban';
+import { findOrCreateUnclaimedBusiness } from '@/lib/business-claim';
+import { recordTimelineEvent } from '@/lib/report-status';
 import { getClientIP } from '@/lib/utils';
-import { MAX_PHOTOS_PER_REPORT } from '@/lib/constants';
+import { MAX_PHOTOS_PER_REPORT, PUBLIC_REPORT_STATUSES } from '@/lib/constants';
 
 export async function POST(request: NextRequest) {
   const ip = getClientIP(request);
@@ -107,6 +109,30 @@ export async function POST(request: NextRequest) {
 
   await serviceClient.from('report_photos').insert(photoRecords);
 
+  await recordTimelineEvent(serviceClient, {
+    reportId: report.id,
+    eventType: 'created',
+    status: 'pending_review',
+    title: 'Qytetari krijoi raportimin',
+    actorId: user?.id ?? null,
+    actorRole: user ? 'citizen' : 'system',
+    createdAt: report.created_at,
+  });
+
+  if (business_name?.trim()) {
+    const business = await findOrCreateUnclaimedBusiness(
+      serviceClient,
+      business_name.trim(),
+      city
+    );
+    if (business) {
+      await serviceClient
+        .from('reports')
+        .update({ business_id: business.id })
+        .eq('id', report.id);
+    }
+  }
+
   return NextResponse.json({ id: report.id, status: 'pending_review' });
 }
 
@@ -122,7 +148,7 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from('reports')
     .select('*, category:categories(*), photos:report_photos(*)')
-    .in('status', ['approved', 'in_progress', 'resolved']);
+    .in('status', PUBLIC_REPORT_STATUSES);
 
   if (city) query = query.eq('city', city);
   if (status) query = query.eq('status', status);

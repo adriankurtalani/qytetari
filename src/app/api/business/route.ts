@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { createNotification } from '@/lib/notifications';
+import { updateReportStatus } from '@/lib/report-status';
+import { PUBLIC_REPORT_STATUSES } from '@/lib/constants';
 
 export async function GET() {
   const supabase = await createClient();
@@ -10,13 +12,27 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  const { data: pendingClaim } = await supabase
+    .from('businesses')
+    .select('*')
+    .eq('claim_submitted_by', user.id)
+    .eq('claim_status', 'pending_claim')
+    .maybeSingle();
+
   const { data: businesses } = await supabase
     .from('businesses')
     .select('*')
-    .eq('owner_id', user.id);
+    .eq('owner_id', user.id)
+    .eq('claim_status', 'verified');
 
   if (!businesses?.length) {
-    return NextResponse.json({ business: null, reports: [] });
+    return NextResponse.json({
+      business: null,
+      pendingClaim: pendingClaim || null,
+      reports: [],
+      responses: [],
+      metrics: { totalReports: 0, resolvedReports: 0, reputationScore: 0 },
+    });
   }
 
   const business = businesses[0];
@@ -25,7 +41,7 @@ export async function GET() {
     .from('reports')
     .select('*, category:categories(*), photos:report_photos(*)')
     .or(`business_id.eq.${business.id},business_name.ilike.%${business.name}%`)
-    .in('status', ['approved', 'in_progress', 'resolved'])
+    .in('status', PUBLIC_REPORT_STATUSES)
     .order('created_at', { ascending: false });
 
   const { data: responses } = await supabase
@@ -35,6 +51,7 @@ export async function GET() {
 
   return NextResponse.json({
     business,
+    pendingClaim: null,
     reports: reports || [],
     responses: responses || [],
     metrics: {
@@ -54,43 +71,23 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const serviceClient = await createServiceClient();
+  const serviceClient = createServiceClient();
 
-  if (body.action === 'create_business') {
-    const { data, error } = await serviceClient
-      .from('businesses')
-      .insert({
-        owner_id: user.id,
-        name: body.name,
-        description: body.description,
-        city: body.city,
-      })
-      .select()
-      .single();
+  const { data: business } = await serviceClient
+    .from('businesses')
+    .select('id, claim_status, is_verified')
+    .eq('owner_id', user.id)
+    .eq('claim_status', 'verified')
+    .maybeSingle();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    await serviceClient
-      .from('profiles')
-      .update({ role: 'business' })
-      .eq('id', user.id);
-
-    return NextResponse.json(data);
+  if (!business) {
+    return NextResponse.json(
+      { error: 'Duhet të keni një biznes të verifikuar për këtë veprim' },
+      { status: 403 }
+    );
   }
 
   if (body.action === 'respond') {
-    const { data: business } = await serviceClient
-      .from('businesses')
-      .select('id')
-      .eq('owner_id', user.id)
-      .single();
-
-    if (!business) {
-      return NextResponse.json({ error: 'Biznesi nuk u gjet' }, { status: 404 });
-    }
-
     const { data, error } = await serviceClient
       .from('business_responses')
       .insert({
@@ -126,13 +123,15 @@ export async function POST(request: NextRequest) {
   }
 
   if (body.action === 'resolve') {
-    const { error } = await serviceClient
-      .from('reports')
-      .update({ status: 'resolved' })
-      .eq('id', body.report_id);
+    const result = await updateReportStatus(serviceClient, {
+      reportId: body.report_id,
+      newStatus: 'resolved',
+      actorId: user.id,
+      actorRole: 'business',
+    });
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!result.success) {
+      return NextResponse.json({ error: result.error }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

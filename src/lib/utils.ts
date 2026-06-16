@@ -11,6 +11,10 @@ export function formatDate(date: string) {
   return format(new Date(date), 'dd MMM yyyy, HH:mm', { locale: sq });
 }
 
+export function formatTimelineDate(date: string) {
+  return format(new Date(date), 'd MMM', { locale: sq });
+}
+
 export function formatRelativeDate(date: string) {
   return formatDistanceToNow(new Date(date), { addSuffix: true, locale: sq });
 }

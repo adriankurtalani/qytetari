@@ -14,6 +14,7 @@ import {
   Clock,
   Eye,
   Settings,
+  Building2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -25,6 +26,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { REPORT_STATUS_LABELS, REPORT_STATUS_COLORS } from '@/lib/constants';
 import { formatRelativeDate, cn } from '@/lib/utils';
 import type { Report } from '@/lib/types';
+import { CitizenTrustBadge } from '@/components/profile/CitizenTrustBadge';
 
 interface Stats {
   totalReports: number;
@@ -116,6 +118,11 @@ export default function AdminPage() {
             <Settings className="h-4 w-4" /> Cilësimet e Platformës
           </Button>
         </Link>
+        <Link href="/admin/business-claims" className="w-full sm:w-auto">
+          <Button variant="outline" className="gap-2 shadow-sm w-full sm:w-auto min-h-[44px]">
+            <Building2 className="h-4 w-4" /> Verifikimi i Bizneseve
+          </Button>
+        </Link>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8 mt-10">
@@ -142,6 +149,18 @@ export default function AdminPage() {
                 </p>
                 <p className="text-xs text-slate-400 mb-3">
                   {report.city} · {formatRelativeDate(report.created_at)}
+                  {report.profile?.citizen_score != null && (
+                    <>
+                      {' · '}
+                      <CitizenTrustBadge
+                        citizenScore={report.profile.citizen_score}
+                        approvedCount={report.profile.approved_reports_count}
+                        rejectedCount={report.profile.rejected_reports_count}
+                        size="inline"
+                        className="inline-flex"
+                      />
+                    </>
+                  )}
                 </p>
                 {report.ai_recommendation && (
                   <p className="text-xs font-medium text-blue-600 bg-blue-50 rounded-lg px-3 py-1.5 mb-3 inline-block">
@@ -153,6 +172,15 @@ export default function AdminPage() {
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
                   <Button size="sm" onClick={() => updateStatus(report.id, 'approved')} className="gap-1">
                     <CheckCircle className="h-3.5 w-3.5" /> Aprovo
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => updateStatus(report.id, 'in_progress')} className="gap-1">
+                    Në Proces
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => updateStatus(report.id, 'waiting_for_response')} className="gap-1">
+                    Prit Përgjigje
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => updateStatus(report.id, 'resolved')} className="gap-1">
+                    Zgjidhur
                   </Button>
                   <Button size="sm" variant="danger" onClick={() => updateStatus(report.id, 'rejected')} className="gap-1">
                     <XCircle className="h-3.5 w-3.5" /> Refuzo

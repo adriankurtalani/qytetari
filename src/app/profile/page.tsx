@@ -15,6 +15,7 @@ import { createClient } from '@/lib/supabase/client';
 import { KOSOVO_CITIES } from '@/lib/constants';
 import { formatDate } from '@/lib/utils';
 import type { Profile } from '@/lib/types';
+import { CitizenTrustBadge } from '@/components/profile/CitizenTrustBadge';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -52,6 +53,27 @@ export default function ProfilePage() {
           city: data.city || '',
           anonymous_mode: data.anonymous_mode,
         });
+
+        if (data.role === 'citizen') {
+          fetch('/api/profile/trust', { method: 'POST' })
+            .then((res) => (res.ok ? res.json() : null))
+            .then((trust) => {
+              if (trust) {
+                setProfile((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        citizen_score: trust.citizen_score,
+                        approved_reports_count: trust.approved_reports_count,
+                        rejected_reports_count: trust.rejected_reports_count,
+                        citizen_activity_points: trust.citizen_activity_points,
+                      }
+                    : prev
+                );
+              }
+            })
+            .catch(() => {});
+        }
       }
       setLoading(false);
     }
@@ -122,6 +144,22 @@ export default function ProfilePage() {
           )}
         </div>
       </PageHeader>
+
+      {profile?.role === 'citizen' && (
+        <div className="mt-6">
+          <CitizenTrustBadge
+            citizenScore={profile.citizen_score ?? 50}
+            approvedCount={profile.approved_reports_count}
+            rejectedCount={profile.rejected_reports_count}
+            size="lg"
+            showStats
+          />
+          <p className="text-xs text-slate-500 mt-2 max-w-xl">
+            Citizen Score bazohet në raportime të aprovuara, të refuzuara dhe aktivitetin tuaj në platformë.
+            Përdoruesit me reputacion të lartë ndihmojnë në uljen e spam-it.
+          </p>
+        </div>
+      )}
 
       <Card className="mt-8" padding="md">
         <div className="flex items-center gap-5 mb-8 pb-8 border-b border-slate-100">

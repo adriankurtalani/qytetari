@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { SlidersHorizontal, X } from 'lucide-react';
+import { SlidersHorizontal, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { REPORT_STATUS_LABELS, LAUNCH_CITY } from '@/lib/constants';
@@ -9,6 +10,7 @@ import {
   getLaunchCitySelectOptions,
   OTHER_CITIES_LAUNCH_MESSAGE,
 } from '@/lib/city-launch';
+import { cn } from '@/lib/utils';
 import type { Category, FeedSort } from '@/lib/types';
 
 interface ReportFiltersProps {
@@ -18,6 +20,7 @@ interface ReportFiltersProps {
 export function ReportFilters({ categories }: ReportFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -31,6 +34,7 @@ export function ReportFilters({ categories }: ReportFiltersProps) {
 
   function clearFilters() {
     router.push('/');
+    setMobileOpen(false);
   }
 
   const cityParam = searchParams.get('city');
@@ -42,9 +46,71 @@ export function ReportFilters({ categories }: ReportFiltersProps) {
     searchParams.get('status') ||
     (searchParams.get('sort') && searchParams.get('sort') !== 'latest');
 
+  const filterFields = (
+    <>
+      <Select
+        label="Renditja"
+        options={[
+          { value: 'latest', label: 'Më të Fundit' },
+          { value: 'most_supported', label: 'Më të Mbështeturat' },
+          { value: 'trending', label: 'Trending' },
+        ]}
+        value={searchParams.get('sort') || 'latest'}
+        onChange={(e) => updateFilter('sort', e.target.value as FeedSort)}
+      />
+      <Select
+        label="Qyteti"
+        options={getLaunchCitySelectOptions('Të gjitha qytetet')}
+        value={citySelectValue}
+        onChange={(e) => updateFilter('city', e.target.value)}
+        hint={OTHER_CITIES_LAUNCH_MESSAGE}
+      />
+      <Select
+        label="Kategoria"
+        options={[
+          { value: '', label: 'Të gjitha kategoritë' },
+          ...categories.map((c) => ({ value: c.slug, label: c.name })),
+        ]}
+        value={searchParams.get('category') || ''}
+        onChange={(e) => updateFilter('category', e.target.value)}
+      />
+      <Select
+        label="Statusi"
+        options={[
+          { value: '', label: 'Të gjitha statuset' },
+          ...Object.entries(REPORT_STATUS_LABELS).map(([value, label]) => ({ value, label })),
+        ]}
+        value={searchParams.get('status') || ''}
+        onChange={(e) => updateFilter('status', e.target.value)}
+      />
+    </>
+  );
+
   return (
     <div className="card rounded-2xl p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-2 mb-4">
+      <button
+        type="button"
+        className="flex w-full items-center justify-between gap-2 sm:hidden min-h-[44px]"
+        onClick={() => setMobileOpen((open) => !open)}
+        aria-expanded={mobileOpen}
+      >
+        <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 min-w-0">
+          <SlidersHorizontal className="h-4 w-4 text-blue-500 shrink-0" />
+          <span className="truncate">Filtro raportimet</span>
+          {hasFilters && (
+            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">
+              Aktiv
+            </span>
+          )}
+        </div>
+        {mobileOpen ? (
+          <ChevronUp className="h-5 w-5 text-slate-400 shrink-0" />
+        ) : (
+          <ChevronDown className="h-5 w-5 text-slate-400 shrink-0" />
+        )}
+      </button>
+
+      <div className="hidden sm:flex items-center justify-between gap-2 mb-4">
         <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 min-w-0">
           <SlidersHorizontal className="h-4 w-4 text-blue-500 shrink-0" />
           <span className="truncate">Filtro raportimet</span>
@@ -56,43 +122,24 @@ export function ReportFilters({ categories }: ReportFiltersProps) {
           </Button>
         )}
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Select
-          label="Renditja"
-          options={[
-            { value: 'latest', label: 'Më të Fundit' },
-            { value: 'most_supported', label: 'Më të Mbështeturat' },
-            { value: 'trending', label: 'Trending' },
-          ]}
-          value={searchParams.get('sort') || 'latest'}
-          onChange={(e) => updateFilter('sort', e.target.value as FeedSort)}
-        />
-        <Select
-          label="Qyteti"
-          options={getLaunchCitySelectOptions('Të gjitha qytetet')}
-          value={citySelectValue}
-          onChange={(e) => updateFilter('city', e.target.value)}
-          hint={OTHER_CITIES_LAUNCH_MESSAGE}
-        />
-        <Select
-          label="Kategoria"
-          options={[
-            { value: '', label: 'Të gjitha kategoritë' },
-            ...categories.map((c) => ({ value: c.slug, label: c.name })),
-          ]}
-          value={searchParams.get('category') || ''}
-          onChange={(e) => updateFilter('category', e.target.value)}
-        />
-        <Select
-          label="Statusi"
-          options={[
-            { value: '', label: 'Të gjitha statuset' },
-            ...Object.entries(REPORT_STATUS_LABELS).map(([value, label]) => ({ value, label })),
-          ]}
-          value={searchParams.get('status') || ''}
-          onChange={(e) => updateFilter('status', e.target.value)}
-        />
+
+      <div
+        className={cn(
+          'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4',
+          mobileOpen ? 'mt-4' : 'hidden sm:grid'
+        )}
+      >
+        {filterFields}
       </div>
+
+      {mobileOpen && hasFilters && (
+        <div className="mt-4 sm:hidden">
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-slate-500 w-full">
+            <X className="h-3.5 w-3.5" />
+            Pastro filtrat
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -146,8 +146,8 @@ interface PhotoFrameProps {
 
 const frameVariants = {
   feed: 'aspect-[4/3] w-full bg-slate-100',
-  /** Mobile: 4:3 full width. Desktop: fixed height cap so hero does not dominate the page. */
-  gallery: 'aspect-[4/3] w-full bg-slate-100 md:aspect-auto md:h-[380px] lg:h-[400px]',
+  /** Fits container to the image's natural aspect ratio (no letterboxing). */
+  gallery: 'w-full',
   thumb: 'h-[5.5rem] w-[5.5rem] shrink-0 bg-slate-100 rounded-xl',
   preview: 'h-28 w-28 bg-slate-100 rounded-xl',
 };
@@ -161,6 +161,40 @@ export function PhotoFrame({
   onClick,
 }: PhotoFrameProps) {
   const isThumb = variant === 'thumb' || variant === 'preview';
+
+  if (variant === 'gallery') {
+    const frameClass = cn(
+      'block w-full overflow-hidden',
+      onClick && 'cursor-zoom-in',
+      className
+    );
+
+    const image = (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={alt}
+        className="block w-full h-auto"
+        loading={priority ? 'eager' : 'lazy'}
+        decoding="async"
+      />
+    );
+
+    if (onClick) {
+      return (
+        <button
+          type="button"
+          onClick={onClick}
+          className={cn(frameClass, 'text-left')}
+          aria-label={`Hap: ${alt}`}
+        >
+          {image}
+        </button>
+      );
+    }
+
+    return <div className={frameClass}>{image}</div>;
+  }
 
   const content = isThumb ? (
     // eslint-disable-next-line @next/next/no-img-element

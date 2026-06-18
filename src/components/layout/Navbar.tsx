@@ -76,8 +76,8 @@ export function Navbar() {
       )}
     >
       <div className="page-container">
-        <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
-          <Link href="/" className="flex min-w-0 items-center gap-2.5 sm:gap-3 group shrink">
+        <div className="flex h-14 sm:h-16 items-center gap-2">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5 sm:gap-3 group shrink-0">
             <SiteLogo size="md" className="group-hover:shadow-lg transition-shadow" />
             <div className="hidden min-w-0 sm:block">
               <span className="font-bold text-slate-900 tracking-tight truncate block">
@@ -89,7 +89,11 @@ export function Navbar() {
             </div>
           </Link>
 
-          <div className="hidden md:flex items-center gap-1">
+          <p className="flex-1 min-w-0 text-center font-bold text-sm text-slate-900 truncate sm:hidden pointer-events-none">
+            {settings.platform_name}
+          </p>
+
+          <div className="hidden md:flex items-center gap-1 flex-1 justify-center">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const active = pathname === link.href;

@@ -4,7 +4,11 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
-import { KOSOVO_CITIES, REPORT_STATUS_LABELS } from '@/lib/constants';
+import { REPORT_STATUS_LABELS, LAUNCH_CITY } from '@/lib/constants';
+import {
+  getLaunchCitySelectOptions,
+  OTHER_CITIES_LAUNCH_MESSAGE,
+} from '@/lib/city-launch';
 import type { Category, FeedSort } from '@/lib/types';
 
 interface ReportFiltersProps {
@@ -29,8 +33,11 @@ export function ReportFilters({ categories }: ReportFiltersProps) {
     router.push('/');
   }
 
+  const cityParam = searchParams.get('city');
+  const citySelectValue = cityParam === null ? LAUNCH_CITY : cityParam;
+
   const hasFilters =
-    searchParams.get('city') ||
+    (cityParam !== null && cityParam !== '') ||
     searchParams.get('category') ||
     searchParams.get('status') ||
     (searchParams.get('sort') && searchParams.get('sort') !== 'latest');
@@ -62,12 +69,10 @@ export function ReportFilters({ categories }: ReportFiltersProps) {
         />
         <Select
           label="Qyteti"
-          options={[
-            { value: '', label: 'Të gjitha qytetet' },
-            ...KOSOVO_CITIES.map((c) => ({ value: c, label: c })),
-          ]}
-          value={searchParams.get('city') || ''}
+          options={getLaunchCitySelectOptions('Të gjitha qytetet')}
+          value={citySelectValue}
           onChange={(e) => updateFilter('city', e.target.value)}
+          hint={OTHER_CITIES_LAUNCH_MESSAGE}
         />
         <Select
           label="Kategoria"

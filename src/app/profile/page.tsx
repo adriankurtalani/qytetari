@@ -12,7 +12,11 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { Toast } from '@/components/ui/Toast';
 import { createClient } from '@/lib/supabase/client';
-import { KOSOVO_CITIES } from '@/lib/constants';
+import { LAUNCH_CITY } from '@/lib/constants';
+import {
+  getLaunchCitySelectOptions,
+  OTHER_CITIES_LAUNCH_MESSAGE,
+} from '@/lib/city-launch';
 import { formatDate } from '@/lib/utils';
 import type { Profile } from '@/lib/types';
 import { CitizenTrustBadge } from '@/components/profile/CitizenTrustBadge';
@@ -204,12 +208,10 @@ export default function ProfilePage() {
           />
           <Select
             label="Qyteti"
-            options={[
-              { value: '', label: 'Zgjidhni qytetin' },
-              ...KOSOVO_CITIES.map((c) => ({ value: c, label: c })),
-            ]}
+            options={getLaunchCitySelectOptions('Zgjidhni qytetin')}
             value={form.city}
             onChange={(e) => setForm({ ...form, city: e.target.value })}
+            hint={OTHER_CITIES_LAUNCH_MESSAGE}
           />
 
           <label className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-slate-50 cursor-pointer hover:border-blue-200 transition-colors">

@@ -80,7 +80,7 @@ export async function updateReportStatus(
 ): Promise<{ success: boolean; error?: string; previousStatus?: ReportStatus }> {
   const { data: existing, error: fetchError } = await supabase
     .from('reports')
-    .select('status, user_id')
+    .select('status, user_id, report_number')
     .eq('id', params.reportId)
     .single();
 
@@ -103,6 +103,11 @@ export async function updateReportStatus(
     return { success: false, error: updateError.message };
   }
 
+  await supabase
+    .from('report_stories')
+    .update({ report_status: params.newStatus })
+    .eq('report_id', params.reportId);
+
   const title = getTimelineTitle(params.newStatus, previousStatus, params.actorRole);
 
   await recordTimelineEvent(supabase, {
@@ -115,7 +120,11 @@ export async function updateReportStatus(
   });
 
   if (params.notifyUser !== false && existing.user_id) {
-    await notifyReportStatusChange(existing.user_id, params.reportId, params.newStatus);
+    await notifyReportStatusChange(
+      existing.user_id,
+      existing.report_number as number,
+      params.newStatus
+    );
   }
 
   const affectsTrust = (s: ReportStatus) =>

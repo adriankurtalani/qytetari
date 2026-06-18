@@ -7,8 +7,15 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Toast } from '@/components/ui/Toast';
-import { LocationPicker, type LocationValue } from '@/components/map/LocationPicker';
-import { KOSOVO_CITIES, MAX_PHOTOS_PER_REPORT, MODERATION_MESSAGE, PHOTO_UPLOAD_GUIDE } from '@/lib/constants';
+import { LocationPickerWrapper } from '@/components/map/LocationPickerWrapper';
+import type { LocationValue } from '@/lib/location-types';
+import {
+  getLaunchCitySelectOptions,
+  isLaunchCity,
+  OTHER_CITIES_LAUNCH_MESSAGE,
+  LAUNCH_CITY,
+} from '@/lib/city-launch';
+import { MAX_PHOTOS_PER_REPORT, MODERATION_MESSAGE, PHOTO_UPLOAD_GUIDE } from '@/lib/constants';
 import { generateAnonymousId } from '@/lib/utils';
 import type { Category } from '@/lib/types';
 
@@ -31,7 +38,7 @@ export function ReportForm({ categories, isLoggedIn, isAnonymous }: ReportFormPr
     description: '',
     category_id: '',
     business_name: '',
-    city: '',
+    city: LAUNCH_CITY,
   });
 
   function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -72,6 +79,11 @@ export function ReportForm({ categories, isLoggedIn, isAnonymous }: ReportFormPr
 
     if (!location) {
       setToast({ message: 'Lokacioni është i domosdoshëm. Lejoni qasjen në lokacion.', type: 'error' });
+      return;
+    }
+
+    if (!isLaunchCity(form.city)) {
+      setToast({ message: OTHER_CITIES_LAUNCH_MESSAGE, type: 'error' });
       return;
     }
 
@@ -174,15 +186,13 @@ export function ReportForm({ categories, isLoggedIn, isAnonymous }: ReportFormPr
 
         <Select
           label="Qyteti *"
-          options={[
-            { value: '', label: 'Zgjidhni qytetin' },
-            ...KOSOVO_CITIES.map((c) => ({ value: c, label: c })),
-          ]}
+          options={getLaunchCitySelectOptions('Zgjidhni qytetin')}
           value={form.city}
           onChange={(e) => {
             setForm({ ...form, city: e.target.value });
             setLocation(null);
           }}
+          hint={OTHER_CITIES_LAUNCH_MESSAGE}
           required
         />
 
@@ -241,7 +251,7 @@ export function ReportForm({ categories, isLoggedIn, isAnonymous }: ReportFormPr
         <section className="space-y-4 pt-2 border-t border-slate-100">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Lokacioni</h3>
         <div>
-          <LocationPicker value={location} onChange={setLocation} city={form.city} />
+          <LocationPickerWrapper value={location} onChange={setLocation} city={form.city} />
         </div>
         </section>
 

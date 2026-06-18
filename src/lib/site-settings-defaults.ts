@@ -14,7 +14,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   hero_title: null,
   hero_description: null,
   hero_cta_primary: 'Raporto Problem',
-  hero_cta_secondary: 'Shiko Hartën',
+  hero_cta_secondary: 'Shiko Raportimet',
   footer_description:
     'Platforma digjitale për transparencë, përgjegjësi dhe përmirësim të shërbimeve publike në Kosovë.',
   footer_tagline: 'Platforma për qytetarët e Kosovës',

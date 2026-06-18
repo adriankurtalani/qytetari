@@ -4,11 +4,12 @@ import { SelectHTMLAttributes, forwardRef } from 'react';
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
-  options: { value: string; label: string }[];
+  hint?: string;
+  options: { value: string; label: string; disabled?: boolean }[];
 }
 
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, error, id, options, ...props }, ref) => {
+  ({ className, label, error, hint, id, options, ...props }, ref) => {
     return (
       <div className="w-full">
         {label && (
@@ -27,11 +28,12 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           {...props}
         >
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
+            <option key={opt.value || '__empty'} value={opt.value} disabled={opt.disabled}>
               {opt.label}
             </option>
           ))}
         </select>
+        {hint && !error && <p className="mt-1.5 text-xs text-slate-500">{hint}</p>}
         {error && <p className="mt-1.5 text-sm text-red-600">{error}</p>}
       </div>
     );

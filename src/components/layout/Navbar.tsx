@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
-  Map,
   PlusCircle,
   Bell,
   User,
@@ -15,7 +14,8 @@ import {
   Building2,
   Megaphone,
   Settings,
-  Landmark,
+  FileText,
+  Newspaper,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
@@ -57,8 +57,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: '/', label: 'Raportimet', icon: Megaphone },
-    { href: '/map', label: 'Harta', icon: Map },
-    { href: '/businesses', label: 'Bizneset', icon: Building2 },
+    { href: '/lajme', label: 'Lajmet', icon: Newspaper },
   ];
 
   const iconBtn =
@@ -129,11 +128,6 @@ export function Navbar() {
                 {profile.role === 'business' && (
                   <Link href="/business" className={cn(iconBtn, 'hidden sm:flex')} title="Biznesi">
                     <Building2 className="h-5 w-5" />
-                  </Link>
-                )}
-                {profile.role === 'municipality' && (
-                  <Link href="/municipality" className={cn(iconBtn, 'hidden sm:flex')} title="Komuna">
-                    <Landmark className="h-5 w-5" />
                   </Link>
                 )}
                 <Link href="/notifications" className={cn(iconBtn, 'relative')} title="Njoftimet">
@@ -216,6 +210,22 @@ export function Navbar() {
                       Paneli i Administratorit
                     </Link>
                     <Link
+                      href="/admin/reports"
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(mobileNavItem, pathname === '/admin/reports' ? 'bg-blue-50 text-blue-700' : 'text-slate-600')}
+                    >
+                      <FileText className="h-4 w-4 shrink-0" />
+                      Menaxho Raportimet
+                    </Link>
+                    <Link
+                      href="/admin/stories"
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(mobileNavItem, pathname === '/admin/stories' ? 'bg-blue-50 text-blue-700' : 'text-slate-600')}
+                    >
+                      <Newspaper className="h-4 w-4 shrink-0" />
+                      Lajmet e Raportimeve
+                    </Link>
+                    <Link
                       href="/admin/settings"
                       onClick={() => setMobileOpen(false)}
                       className={cn(mobileNavItem, pathname === '/admin/settings' ? 'bg-blue-50 text-blue-700' : 'text-slate-600')}
@@ -233,16 +243,6 @@ export function Navbar() {
                   >
                     <Building2 className="h-4 w-4 shrink-0" />
                     Paneli i Biznesit
-                  </Link>
-                )}
-                {profile.role === 'municipality' && (
-                  <Link
-                    href="/municipality"
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(mobileNavItem, pathname === '/municipality' ? 'bg-blue-50 text-blue-700' : 'text-slate-600')}
-                  >
-                    <Landmark className="h-4 w-4 shrink-0" />
-                    Portali i Komunes
                   </Link>
                 )}
                 <Link

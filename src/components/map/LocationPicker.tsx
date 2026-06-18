@@ -5,19 +5,16 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, Crosshair, AlertCircle, Map } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { createPreciseMarkerIcon } from '@/lib/map-leaflet';
 import {
-  createPreciseMarkerIcon,
   formatCoordinates,
   getCityCenter,
   distanceKm,
   PRECISE_MAP_ZOOM,
 } from '@/lib/map-utils';
+import type { LocationValue } from '@/lib/location-types';
 
-export interface LocationValue {
-  lat: number;
-  lng: number;
-  accuracy?: number;
-}
+export type { LocationValue };
 
 interface LocationPickerProps {
   value: LocationValue | null;

@@ -14,7 +14,7 @@ import {
   Clock,
   Eye,
   Settings,
-  Building2,
+  Newspaper,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -25,8 +25,10 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { REPORT_STATUS_LABELS, REPORT_STATUS_COLORS } from '@/lib/constants';
 import { formatRelativeDate, cn } from '@/lib/utils';
+import { getReportPublicPath } from '@/lib/report-url';
 import type { Report } from '@/lib/types';
 import { CitizenTrustBadge } from '@/components/profile/CitizenTrustBadge';
+import { ReportWeeklyPinButton } from '@/components/reports/ReportWeeklyPinButton';
 
 interface Stats {
   totalReports: number;
@@ -75,6 +77,15 @@ export default function AdminPage() {
     }
   }
 
+  function handlePinToggle(reportId: string, pinned: boolean) {
+    setPendingReports((prev) =>
+      prev.map((r) => ({
+        ...r,
+        is_weekly_spotlight: r.id === reportId ? pinned : pinned ? false : r.is_weekly_spotlight,
+      }))
+    );
+  }
+
   if (loading) return <LoadingSpinner />;
 
   return (
@@ -103,6 +114,16 @@ export default function AdminPage() {
       </div>
 
       <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 mt-6 sm:mt-8">
+        <Link href="/admin/reports" className="w-full sm:w-auto">
+          <Button className="gap-2 shadow-sm w-full sm:w-auto min-h-[44px]">
+            <FileText className="h-4 w-4" /> Menaxho Raportimet
+          </Button>
+        </Link>
+        <Link href="/admin/stories" className="w-full sm:w-auto">
+          <Button variant="outline" className="gap-2 shadow-sm w-full sm:w-auto min-h-[44px]">
+            <Newspaper className="h-4 w-4" /> Lajmet e Raportimeve
+          </Button>
+        </Link>
         <Link href="/admin/users" className="w-full sm:w-auto">
           <Button variant="outline" className="gap-2 shadow-sm w-full sm:w-auto min-h-[44px]">
             <Users className="h-4 w-4" /> Menaxho Përdoruesit
@@ -116,11 +137,6 @@ export default function AdminPage() {
         <Link href="/admin/settings" className="w-full sm:w-auto">
           <Button variant="outline" className="gap-2 shadow-sm w-full sm:w-auto min-h-[44px]">
             <Settings className="h-4 w-4" /> Cilësimet e Platformës
-          </Button>
-        </Link>
-        <Link href="/admin/business-claims" className="w-full sm:w-auto">
-          <Button variant="outline" className="gap-2 shadow-sm w-full sm:w-auto min-h-[44px]">
-            <Building2 className="h-4 w-4" /> Verifikimi i Bizneseve
           </Button>
         </Link>
       </div>
@@ -139,7 +155,9 @@ export default function AdminPage() {
             {pendingReports.map((report) => (
               <Card key={report.id} padding="md" className="card-hover">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-2">
-                  <h3 className="font-semibold text-slate-900 leading-snug break-words min-w-0">{report.title}</h3>
+                  <h3 className="font-semibold text-slate-900 leading-snug break-words min-w-0">
+                    <span className="text-blue-600">#{report.report_number}</span> {report.title}
+                  </h3>
                   <Badge className={cn(REPORT_STATUS_COLORS[report.status], 'self-start shrink-0')}>
                     {REPORT_STATUS_LABELS[report.status]}
                   </Badge>
@@ -185,7 +203,12 @@ export default function AdminPage() {
                   <Button size="sm" variant="danger" onClick={() => updateStatus(report.id, 'rejected')} className="gap-1">
                     <XCircle className="h-3.5 w-3.5" /> Refuzo
                   </Button>
-                  <Link href={`/reports/${report.id}`}>
+                  <ReportWeeklyPinButton
+                    reportId={report.id}
+                    isPinned={!!report.is_weekly_spotlight}
+                    onToggle={(pinned) => handlePinToggle(report.id, pinned)}
+                  />
+                  <Link href={getReportPublicPath(report.report_number)}>
                     <Button size="sm" variant="outline" className="gap-1">
                       <Eye className="h-3.5 w-3.5" /> Shiko
                     </Button>

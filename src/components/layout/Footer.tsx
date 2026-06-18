@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Map, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
 import { SiteLogo } from '@/components/layout/SiteLogo';
 import { useSiteSettings } from '@/components/providers/SiteSettingsProvider';
 
@@ -27,11 +27,6 @@ export function Footer() {
             <ul className="space-y-2.5 text-sm text-slate-500">
               <li>
                 <Link href="/" className="hover:text-blue-600 transition-colors">Raportimet</Link>
-              </li>
-              <li>
-                <Link href="/map" className="hover:text-blue-600 transition-colors flex items-center gap-1.5">
-                  <Map className="h-3.5 w-3.5" /> Harta interaktive
-                </Link>
               </li>
               <li>
                 <Link href="/reports/new" className="hover:text-blue-600 transition-colors">Raporto problem</Link>

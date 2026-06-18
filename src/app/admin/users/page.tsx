@@ -105,7 +105,6 @@ export default function AdminUsersPage() {
                       options={[
                         { value: 'citizen', label: 'Qytetar' },
                         { value: 'business', label: 'Biznes' },
-                        { value: 'municipality', label: 'Komunë' },
                         { value: 'admin', label: 'Admin' },
                       ]}
                       value={user.role}
@@ -191,7 +190,6 @@ export default function AdminUsersPage() {
                           options={[
                             { value: 'citizen', label: 'Qytetar' },
                             { value: 'business', label: 'Biznes' },
-                            { value: 'municipality', label: 'Komunë' },
                             { value: 'admin', label: 'Admin' },
                           ]}
                           value={user.role}

@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
-import { verifyAdmin } from '@/lib/admin-auth';
+import { verifyAdmin, getAdminAccess, adminDenyMessage } from '@/lib/admin-auth';
 import { updateReportStatus } from '@/lib/report-status';
 import type { ReportStatus } from '@/lib/types';
 
 export async function GET() {
-  const admin = await verifyAdmin();
-  if (!admin) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  const access = await getAdminAccess();
+  if (!access.ok) {
+    return NextResponse.json(
+      {
+        error: 'Unauthorized',
+        reason: access.reason,
+        message: adminDenyMessage(access.reason, access.role),
+      },
+      { status: access.reason === 'unauthenticated' ? 401 : 403 }
+    );
   }
 
   const serviceClient = createServiceClient();

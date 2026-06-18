@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { MapPin, ArrowLeft, Building2, User, History } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/Badge';
@@ -8,12 +8,17 @@ import { VoteButtons } from '@/components/reports/VoteButtons';
 import { CommentSection } from '@/components/reports/CommentSection';
 import { ReportPhotoGallery } from '@/components/reports/ReportPhotoGallery';
 import { ReportMapWrapper } from '@/components/map/ReportMapWrapper';
-import { BusinessClaimBanner } from '@/components/business/BusinessClaimBanner';
 import { ReportTimeline } from '@/components/reports/ReportTimeline';
 import { ReportStatusAdmin } from '@/components/reports/ReportStatusAdmin';
+import { ReportWeeklyPinButton } from '@/components/reports/ReportWeeklyPinButton';
+import { ReportShareButtons } from '@/components/reports/ReportShareButtons';
+import { RelatedReportsSection } from '@/components/reports/RelatedReportsSection';
+import { getRelatedReportContext } from '@/lib/impact-stats';
+import { fetchReportByRouteParam } from '@/lib/report-lookup';
+import { formatReportLabel, isUuid } from '@/lib/report-url';
 import { REPORT_STATUS_LABELS, REPORT_STATUS_COLORS } from '@/lib/constants';
 import { formatDate, cn } from '@/lib/utils';
-import type { ReportStatus } from '@/lib/types';
+import type { ReportStatus, Report } from '@/lib/types';
 import { CitizenTrustBadge } from '@/components/profile/CitizenTrustBadge';
 
 interface ReportDetailProps {
@@ -24,19 +29,20 @@ export default async function ReportDetailPage({ params }: ReportDetailProps) {
   const { id } = await params;
   const supabase = await createClient();
 
-  const { data: report } = await supabase
-    .from('reports')
-    .select(`
+  const reportSelect = `
       *,
       category:categories(*),
       photos:report_photos(*),
-      profile:profiles(id, username, full_name, anonymous_mode, citizen_score, approved_reports_count, rejected_reports_count),
-      business:businesses(id, slug, name, city, claim_status, is_verified, report_count)
-    `)
-    .eq('id', id)
-    .single();
+      profile:profiles(id, username, full_name, anonymous_mode, citizen_score, approved_reports_count, rejected_reports_count)
+    `;
+
+  const { data: report } = await fetchReportByRouteParam<Report>(supabase, id, reportSelect);
 
   if (!report) notFound();
+
+  if (isUuid(id) && report.report_number) {
+    redirect(`/reports/${report.report_number}`);
+  }
 
   const { data: { user } } = await supabase.auth.getUser();
   let userVote = null;
@@ -66,7 +72,7 @@ export default async function ReportDetailPage({ params }: ReportDetailProps) {
       .select('role')
       .eq('id', user.id)
       .single();
-    isModerator = modProfile?.role === 'admin' || modProfile?.role === 'municipality';
+    isModerator = modProfile?.role === 'admin';
   }
 
   const { data: timelineEvents } = await supabase
@@ -107,6 +113,8 @@ export default async function ReportDetailPage({ params }: ReportDetailProps) {
     })
   );
 
+  const relatedContext = await getRelatedReportContext(supabase, report);
+
   const author = report.profile?.anonymous_mode
     ? 'Anonim'
     : report.profile?.username || 'Anonim';
@@ -128,9 +136,14 @@ export default async function ReportDetailPage({ params }: ReportDetailProps) {
 
         <div className="p-4 sm:p-6 md:p-8">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-5">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-slate-900 leading-tight break-words min-w-0">
-              {report.title}
-            </h1>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wide text-blue-600 mb-2">
+                {formatReportLabel(report.report_number)}
+              </p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-slate-900 leading-tight break-words">
+                {report.title}
+              </h1>
+            </div>
             <Badge className={cn(REPORT_STATUS_COLORS[report.status as ReportStatus], 'self-start shrink-0')}>
               {REPORT_STATUS_LABELS[report.status as ReportStatus]}
             </Badge>
@@ -165,39 +178,20 @@ export default async function ReportDetailPage({ params }: ReportDetailProps) {
               {formatDate(report.created_at)}
             </span>
             {report.business_name && (
-              report.business?.slug ? (
-                <Link
-                  href={`/businesses/${report.business.slug}`}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 transition-colors"
-                >
-                  <Building2 className="h-3.5 w-3.5" />
-                  {report.business_name}
-                </Link>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700">
-                  <Building2 className="h-3.5 w-3.5" />
-                  {report.business_name}
-                </span>
-              )
+              <span className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-3 py-1.5 text-xs font-semibold text-indigo-700">
+                <Building2 className="h-3.5 w-3.5" />
+                {report.business_name}
+              </span>
             )}
           </div>
 
-          <p className="text-slate-600 leading-relaxed text-sm sm:text-base mb-6 sm:mb-8 break-words">{report.description}</p>
+          <p className="text-slate-600 leading-relaxed text-sm sm:text-base mb-4 sm:mb-6 break-words">{report.description}</p>
 
-          {report.business && (
-            <BusinessClaimBanner business={report.business} isLoggedIn={!!user} />
-          )}
-
-          {!report.business && report.business_name && (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 mb-6">
-              <p className="text-sm text-slate-600">
-                Biznesi <strong>{report.business_name}</strong> do të krijohet automatikisht në sistem pas moderimit.
-              </p>
-              <Link href="/businesses" className="text-sm text-blue-600 hover:underline mt-2 inline-block">
-                Shiko bizneset e disponueshme për verifikim →
-              </Link>
-            </div>
-          )}
+          <ReportShareButtons
+            title={report.title}
+            reportNumber={report.report_number}
+            className="mb-6"
+          />
 
           <div className="rounded-xl bg-slate-50 border border-slate-100 p-4">
             <VoteButtons
@@ -223,6 +217,8 @@ export default async function ReportDetailPage({ params }: ReportDetailProps) {
         </div>
       </Card>
 
+      <RelatedReportsSection report={report} context={relatedContext} />
+
       <Card className="mt-6" padding="lg">
         <h2 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
           <History className="h-5 w-5 text-blue-500" />
@@ -232,8 +228,18 @@ export default async function ReportDetailPage({ params }: ReportDetailProps) {
       </Card>
 
       {isModerator && (
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
           <ReportStatusAdmin reportId={report.id} currentStatus={report.status as ReportStatus} />
+          <Card padding="md" className="border-amber-200 bg-amber-50/30">
+            <h3 className="font-bold text-slate-900 text-sm mb-3">Raporti i javës</h3>
+            <p className="text-sm text-slate-600 mb-4">
+              Vendos këtë raport si të theksuar në faqen kryesore, ose hiqe pinin.
+            </p>
+            <ReportWeeklyPinButton
+              reportId={report.id}
+              isPinned={!!report.is_weekly_spotlight}
+            />
+          </Card>
         </div>
       )}
 

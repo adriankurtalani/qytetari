@@ -1,5 +1,3 @@
-import L from 'leaflet';
-
 import { CITY_COORDINATES, DEFAULT_MAP_CENTER } from '@/lib/constants';
 
 export const PRECISE_MAP_ZOOM = 18;
@@ -32,23 +30,4 @@ export function distanceKm(
 
 export function formatCoordinates(lat: number, lng: number, precision = 6): string {
   return `${lat.toFixed(precision)}, ${lng.toFixed(precision)}`;
-}
-
-export function createPreciseMarkerIcon(color = '#dc2626'): L.DivIcon {
-  return L.divIcon({
-    className: 'precise-marker',
-    html: `
-      <div class="precise-marker-pin" style="--pin-color:${color}">
-        <span class="precise-marker-dot"></span>
-        <span class="precise-marker-pulse"></span>
-      </div>
-    `,
-    iconSize: [28, 28],
-    iconAnchor: [14, 14],
-    popupAnchor: [0, -14],
-  });
-}
-
-export function createReportMarkerIcon(): L.DivIcon {
-  return createPreciseMarkerIcon('#2563eb');
 }

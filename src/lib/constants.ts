@@ -41,6 +41,12 @@ export const KOSOVO_CITIES = [
   'Leposaviq',
 ] as const;
 
+/** Faza 1 — vetëm ky qytet është aktiv për raportime. */
+export const LAUNCH_CITY = 'Gjilan';
+
+export const OTHER_CITIES_LAUNCH_MESSAGE =
+  'Komunat tjera do të finalizohen ditët në vijim.';
+
 export const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {
   pending_review: 'Në Pritje të Rishikimit',
   approved: 'Aprovuar',

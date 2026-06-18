@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { moderateContent } from '@/lib/ai-moderation';
 import { checkIPBan, banIP, getBannedWords } from '@/lib/ip-ban';
-import { findOrCreateUnclaimedBusiness } from '@/lib/business-claim';
 import { recordTimelineEvent } from '@/lib/report-status';
 import { getClientIP } from '@/lib/utils';
 import { MAX_PHOTOS_PER_REPORT, PUBLIC_REPORT_STATUSES } from '@/lib/constants';
+import { isLaunchCity, OTHER_CITIES_LAUNCH_MESSAGE } from '@/lib/city-launch';
 
 export async function POST(request: NextRequest) {
   const ip = getClientIP(request);
@@ -33,6 +33,10 @@ export async function POST(request: NextRequest) {
 
   if (!title || !description || !category_id || !city || !latitude || !longitude) {
     return NextResponse.json({ error: 'Fushat e domosdoshme mungojnë' }, { status: 400 });
+  }
+
+  if (!isLaunchCity(city)) {
+    return NextResponse.json({ error: OTHER_CITIES_LAUNCH_MESSAGE }, { status: 400 });
   }
 
   if (!photo_urls || photo_urls.length === 0) {
@@ -119,21 +123,11 @@ export async function POST(request: NextRequest) {
     createdAt: report.created_at,
   });
 
-  if (business_name?.trim()) {
-    const business = await findOrCreateUnclaimedBusiness(
-      serviceClient,
-      business_name.trim(),
-      city
-    );
-    if (business) {
-      await serviceClient
-        .from('reports')
-        .update({ business_id: business.id })
-        .eq('id', report.id);
-    }
-  }
-
-  return NextResponse.json({ id: report.id, status: 'pending_review' });
+  return NextResponse.json({
+    id: report.id,
+    report_number: report.report_number,
+    status: 'pending_review',
+  });
 }
 
 export async function GET(request: NextRequest) {

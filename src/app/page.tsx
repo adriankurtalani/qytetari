@@ -1,12 +1,14 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { PlusCircle, Map, TrendingUp, Shield } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { ReportCard } from '@/components/reports/ReportCard';
 import { ReportFilters } from '@/components/reports/ReportFilters';
 import { Button } from '@/components/ui/Button';
-import { getSiteSettings, getHeroTitle, getHeroDescription } from '@/lib/site-settings';
-import { PUBLIC_REPORT_STATUSES } from '@/lib/constants';
+import { PUBLIC_REPORT_STATUSES, LAUNCH_CITY } from '@/lib/constants';
+import { getWeeklySpotlightReport, getRecentlyResolvedReports } from '@/lib/impact-stats';
+import { WeeklyReportSpotlight } from '@/components/home/WeeklyReportSpotlight';
+import { ResolvedReportsSection } from '@/components/home/ResolvedReportsSection';
 import type { FeedSort } from '@/lib/types';
 
 interface HomeProps {
@@ -27,12 +29,14 @@ export default async function HomePage({ searchParams }: HomeProps) {
     .select('*')
     .eq('is_active', true);
 
+  const cityFilter = params.city || LAUNCH_CITY;
+
   let query = supabase
     .from('reports')
     .select('*, category:categories(*), photos:report_photos(*)')
     .in('status', PUBLIC_REPORT_STATUSES);
 
-  if (params.city) query = query.eq('city', params.city);
+  query = query.eq('city', cityFilter);
   if (params.status) query = query.eq('status', params.status);
   if (params.category) {
     const { data: cat } = await supabase
@@ -53,70 +57,21 @@ export default async function HomePage({ searchParams }: HomeProps) {
   }
 
   const { data: reports } = await query.limit(30);
-  const settings = await getSiteSettings();
+
+  const [spotlightReport, resolvedReports] = await Promise.all([
+    getWeeklySpotlightReport(supabase, cityFilter),
+    getRecentlyResolvedReports(supabase, cityFilter),
+  ]);
 
   return (
     <>
-      {/* Hero */}
-      <section className="hero-gradient text-white">
-        <div className="page-container py-8 sm:py-12 md:py-16">
-          <div className="max-w-2xl animate-fade-in min-w-0">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] sm:text-xs font-medium backdrop-blur-sm mb-4">
-              <Shield className="h-3.5 w-3.5 shrink-0" />
-              {settings.hero_badge}
-            </span>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-tight break-words">
-              {getHeroTitle(settings)}
-            </h1>
-            <p className="mt-3 sm:mt-4 text-blue-100 text-sm sm:text-base md:text-lg leading-relaxed">
-              {getHeroDescription(settings)}
-            </p>
-            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row flex-wrap gap-3">
-              <Link href="/reports/new" className="w-full sm:w-auto">
-                <Button variant="hero" size="lg" className="gap-2 w-full sm:w-auto min-h-[44px]">
-                  <PlusCircle className="h-5 w-5" />
-                  {settings.hero_cta_primary}
-                </Button>
-              </Link>
-              <Link href="/map" className="w-full sm:w-auto">
-                <Button
-                  variant="ghost"
-                  size="lg"
-                  className="gap-2 w-full sm:w-auto min-h-[44px] text-white border border-white/30 bg-white/10 hover:bg-white/20 hover:text-white"
-                >
-                  <Map className="h-5 w-5" />
-                  {settings.hero_cta_secondary}
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-8 sm:mt-10 grid grid-cols-3 gap-2 sm:gap-4 max-w-lg">
-            {[
-              { icon: TrendingUp, label: 'Transparencë' },
-              { icon: Map, label: 'Lokacion i saktë' },
-              { icon: Shield, label: 'Moderim i sigurt' },
-            ].map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center gap-1.5 sm:gap-2 rounded-xl bg-white/10 px-2 sm:px-3 py-3 sm:py-4 backdrop-blur-sm text-center min-w-0"
-              >
-                <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-200 shrink-0" />
-                <span className="text-[10px] sm:text-xs font-medium text-blue-100 leading-tight">{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Feed */}
       <div className="page-container py-6 sm:py-10">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Raportimet e fundit</h2>
             <p className="text-sm text-slate-500 mt-1">
               {reports?.length || 0} raportime publike
-              {params.city ? ` në ${params.city}` : ''}
+              {` në ${cityFilter}`}
             </p>
           </div>
         </div>
@@ -155,6 +110,10 @@ export default async function HomePage({ searchParams }: HomeProps) {
           </div>
         )}
       </div>
+
+      {spotlightReport && <WeeklyReportSpotlight report={spotlightReport} />}
+
+      <ResolvedReportsSection reports={resolvedReports} />
     </>
   );
 }

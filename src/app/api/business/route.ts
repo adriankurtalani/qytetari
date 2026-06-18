@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { createNotification } from '@/lib/notifications';
+import { getReportPublicPath } from '@/lib/report-url';
 import { updateReportStatus } from '@/lib/report-status';
 import { PUBLIC_REPORT_STATUSES } from '@/lib/constants';
 
@@ -12,23 +13,14 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: pendingClaim } = await supabase
-    .from('businesses')
-    .select('*')
-    .eq('claim_submitted_by', user.id)
-    .eq('claim_status', 'pending_claim')
-    .maybeSingle();
-
   const { data: businesses } = await supabase
     .from('businesses')
     .select('*')
-    .eq('owner_id', user.id)
-    .eq('claim_status', 'verified');
+    .eq('owner_id', user.id);
 
   if (!businesses?.length) {
     return NextResponse.json({
       business: null,
-      pendingClaim: pendingClaim || null,
       reports: [],
       responses: [],
       metrics: { totalReports: 0, resolvedReports: 0, reputationScore: 0 },
@@ -51,7 +43,6 @@ export async function GET() {
 
   return NextResponse.json({
     business,
-    pendingClaim: null,
     reports: reports || [],
     responses: responses || [],
     metrics: {
@@ -75,14 +66,13 @@ export async function POST(request: NextRequest) {
 
   const { data: business } = await serviceClient
     .from('businesses')
-    .select('id, claim_status, is_verified')
+    .select('id, is_verified')
     .eq('owner_id', user.id)
-    .eq('claim_status', 'verified')
     .maybeSingle();
 
   if (!business) {
     return NextResponse.json(
-      { error: 'Duhet të keni një biznes të verifikuar për këtë veprim' },
+      { error: 'Nuk keni një biznes të lidhur me llogarinë tuaj' },
       { status: 403 }
     );
   }
@@ -105,7 +95,7 @@ export async function POST(request: NextRequest) {
 
     const { data: report } = await serviceClient
       .from('reports')
-      .select('user_id, title')
+      .select('user_id, title, report_number')
       .eq('id', body.report_id)
       .single();
 
@@ -115,7 +105,7 @@ export async function POST(request: NextRequest) {
         'business_response',
         'Përgjigje nga Biznesi',
         `Biznesi u përgjigj në raportimin "${report.title}"`,
-        `/reports/${body.report_id}`
+        getReportPublicPath(report.report_number)
       );
     }
 

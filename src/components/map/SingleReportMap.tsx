@@ -5,6 +5,8 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import {
   createPreciseMarkerIcon,
+} from '@/lib/map-leaflet';
+import {
   formatCoordinates,
   DETAIL_MAP_ZOOM,
 } from '@/lib/map-utils';

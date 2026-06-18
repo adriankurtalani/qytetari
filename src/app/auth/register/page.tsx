@@ -9,7 +9,11 @@ import { Select } from '@/components/ui/Select';
 import { Toast } from '@/components/ui/Toast';
 import { AuthLayout } from '@/components/layout/AuthLayout';
 import { createClient } from '@/lib/supabase/client';
-import { KOSOVO_CITIES } from '@/lib/constants';
+import { LAUNCH_CITY } from '@/lib/constants';
+import {
+  getLaunchCitySelectOptions,
+  OTHER_CITIES_LAUNCH_MESSAGE,
+} from '@/lib/city-launch';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -18,7 +22,7 @@ export default function RegisterPage() {
     password: '',
     full_name: '',
     username: '',
-    city: '',
+    city: LAUNCH_CITY,
   });
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -105,12 +109,10 @@ export default function RegisterPage() {
           />
           <Select
             label="Qyteti"
-            options={[
-              { value: '', label: 'Zgjidhni qytetin' },
-              ...KOSOVO_CITIES.map((c) => ({ value: c, label: c })),
-            ]}
+            options={getLaunchCitySelectOptions('Zgjidhni qytetin')}
             value={form.city}
             onChange={(e) => setForm({ ...form, city: e.target.value })}
+            hint={OTHER_CITIES_LAUNCH_MESSAGE}
             required
           />
           <Button type="submit" className="w-full" size="lg" loading={loading}>

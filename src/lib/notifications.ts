@@ -1,5 +1,6 @@
 import { createServiceClient } from '@/lib/supabase/server';
 import type { NotificationType } from '@/lib/types';
+import { getReportPublicPath } from '@/lib/report-url';
 
 export async function createNotification(
   userId: string,
@@ -21,7 +22,7 @@ export async function createNotification(
 
 export async function notifyReportStatusChange(
   userId: string,
-  reportId: string,
+  reportNumber: number,
   status: string
 ) {
   const statusMessages: Record<string, { title: string; message: string; type: NotificationType }> = {
@@ -59,7 +60,7 @@ export async function notifyReportStatusChange(
       notification.type,
       notification.title,
       notification.message,
-      `/reports/${reportId}`
+      getReportPublicPath(reportNumber)
     );
   }
 }

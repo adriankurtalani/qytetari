@@ -4,6 +4,7 @@ import { ThumbsUp, ThumbsDown, MessageCircle, MapPin, ArrowRight } from 'lucide-
 import { Badge } from '@/components/ui/Badge';
 import { REPORT_STATUS_LABELS, REPORT_STATUS_COLORS } from '@/lib/constants';
 import { formatRelativeDate, cn } from '@/lib/utils';
+import { getReportPublicPath } from '@/lib/report-url';
 import type { Report } from '@/lib/types';
 
 interface ReportCardProps {
@@ -14,7 +15,7 @@ export function ReportCard({ report }: ReportCardProps) {
   const photo = report.photos?.[0];
 
   return (
-    <Link href={`/reports/${report.id}`} className="group block">
+    <Link href={getReportPublicPath(report.report_number)} className="group block">
       <article className="card card-hover rounded-2xl overflow-hidden h-full flex flex-col">
         {photo ? (
           <div className="relative aspect-[4/3] w-full bg-slate-100 overflow-hidden">
@@ -39,6 +40,7 @@ export function ReportCard({ report }: ReportCardProps) {
         <div className="p-4 sm:p-5 flex flex-col flex-1 min-w-0">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-2">
             <h3 className="font-bold text-slate-900 line-clamp-2 group-hover:text-blue-700 transition-colors leading-snug min-w-0">
+              <span className="text-blue-600 font-semibold">#{report.report_number}</span>{' '}
               {report.title}
             </h3>
             <Badge className={cn(REPORT_STATUS_COLORS[report.status], 'self-start shrink-0')}>

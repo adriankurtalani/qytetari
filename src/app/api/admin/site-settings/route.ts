@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { revalidateTag } from 'next/cache';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { DEFAULT_SITE_SETTINGS } from '@/lib/site-settings-defaults';
 import type { SiteSettingsUpdate } from '@/lib/types';
@@ -134,6 +134,7 @@ export async function PATCH(request: NextRequest) {
   }
 
   revalidateTag('site-settings', 'max');
+  revalidatePath('/', 'layout');
 
   return NextResponse.json({ ...DEFAULT_SITE_SETTINGS, ...data });
 }

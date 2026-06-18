@@ -9,9 +9,6 @@ import {
   MessageSquare,
   CheckCircle,
   Eye,
-  Clock,
-  ArrowRight,
-  Search,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -21,13 +18,12 @@ import { StatCard } from '@/components/ui/StatCard';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { REPORT_STATUS_LABELS, REPORT_STATUS_COLORS } from '@/lib/constants';
-import { CLAIM_STATUS_LABELS } from '@/lib/business-claim';
+import { getReportPublicPath } from '@/lib/report-url';
 import { formatRelativeDate, cn } from '@/lib/utils';
 import type { Business, Report } from '@/lib/types';
 
 interface BusinessData {
   business: Business | null;
-  pendingClaim: Business | null;
   reports: Report[];
   metrics: {
     totalReports: number;
@@ -83,40 +79,13 @@ export default function BusinessDashboardPage() {
 
   if (loading) return <LoadingSpinner />;
 
-  if (data?.pendingClaim && !data.business) {
-    const pending = data.pendingClaim;
-    return (
-      <div className="page-container-narrow py-6 sm:py-10 animate-fade-in">
-        <PageHeader
-          badge="Biznes"
-          title="Kërkesa në Pritje"
-          description={`Verifikimi për "${pending.name}" po shqyrtohet nga ekipi ynë.`}
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-50">
-            <Clock className="h-6 w-6 text-amber-600" />
-          </div>
-        </PageHeader>
-
-        <Card className="mt-8" padding="md">
-          <Badge className="bg-amber-100 text-amber-800 mb-4">
-            {CLAIM_STATUS_LABELS.pending_claim}
-          </Badge>
-          <p className="text-slate-600 text-sm leading-relaxed">
-            Do të njoftoheni brenda 1-3 ditëve pune pasi administrata të shqyrtojë certifikatën,
-            emailin zyrtar dhe numrin fiskal. Pas aprovimit, do të keni qasje në panelin e biznesit.
-          </p>
-        </Card>
-      </div>
-    );
-  }
-
   if (!data?.business) {
     return (
       <div className="page-container-narrow py-6 sm:py-10 animate-fade-in">
         <PageHeader
           badge="Biznes"
-          title="Verifikoni Biznesin Tuaj"
-          description="Gjeni biznesin tuaj në listë dhe dorëzoni dokumentacionin për verifikim."
+          title="Paneli i Biznesit"
+          description="Nuk keni një biznes të lidhur me llogarinë tuaj."
         >
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-50">
             <Building2 className="h-6 w-6 text-indigo-600" />
@@ -124,26 +93,9 @@ export default function BusinessDashboardPage() {
         </PageHeader>
 
         <Card className="mt-8" padding="md">
-          <div className="space-y-4 text-sm text-slate-600 leading-relaxed">
-            <p>
-              Kur qytetarët raportojnë një biznes (p.sh. &quot;Restaurant X&quot;), sistemi krijon
-              automatikisht një <strong>biznes pa pronar</strong>. Ju si pronar mund ta
-              verifikoni duke dorëzuar:
-            </p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>Certifikatën e biznesit</li>
-              <li>Email zyrtar</li>
-              <li>Numrin fiskal (NUI)</li>
-            </ul>
-          </div>
-
-          <Link href="/businesses" className="block mt-6">
-            <Button size="lg" className="w-full gap-2">
-              <Search className="h-4 w-4" />
-              Kërko & Claim Business
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            Kontaktoni administratorin nëse jeni pronar biznesi dhe keni nevojë për qasje në panel.
+          </p>
         </Card>
       </div>
     );
@@ -198,7 +150,7 @@ export default function BusinessDashboardPage() {
               <Card key={report.id} padding="md" className="card-hover">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-2">
                   <Link
-                    href={`/reports/${report.id}`}
+                    href={getReportPublicPath(report.report_number)}
                     className="font-semibold text-slate-900 hover:text-blue-600 leading-snug break-words min-w-0"
                   >
                     {report.title}
@@ -242,7 +194,7 @@ export default function BusinessDashboardPage() {
                         Shëno si të Zgjidhur
                       </Button>
                     )}
-                    <Link href={`/reports/${report.id}`}>
+                    <Link href={getReportPublicPath(report.report_number)}>
                       <Button size="sm" variant="ghost" className="gap-1">
                         <Eye className="h-3.5 w-3.5" /> Shiko
                       </Button>

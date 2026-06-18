@@ -51,6 +51,7 @@ export interface Category {
 
 export interface Report {
   id: string;
+  report_number: number;
   user_id: string | null;
   anonymous_id: string | null;
   title: string;
@@ -67,6 +68,7 @@ export interface Report {
   support_count: number;
   disagree_count: number;
   comment_count: number;
+  is_weekly_spotlight: boolean;
   created_at: string;
   updated_at: string;
   category?: Category;
@@ -218,4 +220,20 @@ export interface ReportTimelineEvent {
   actor_role: TimelineActorRole;
   created_at: string;
   actor?: Pick<Profile, 'full_name' | 'username'> | null;
+}
+
+export interface ReportStory {
+  id: string;
+  report_id: string;
+  title: string;
+  content: string;
+  report_status: ReportStatus;
+  is_published: boolean;
+  like_count: number;
+  published_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+  report?: Report;
+  user_liked?: boolean;
 }

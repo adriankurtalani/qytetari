@@ -3,6 +3,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { moderateComment } from '@/lib/ai-moderation';
 import { checkIPBan, banIP, getBannedWords } from '@/lib/ip-ban';
 import { createNotification } from '@/lib/notifications';
+import { getReportPublicPath } from '@/lib/report-url';
 import { getClientIP } from '@/lib/utils';
 import { recalculateCitizenTrust } from '@/lib/citizen-trust';
 
@@ -112,7 +113,7 @@ export async function POST(
 
   const { data: report } = await serviceClient
     .from('reports')
-    .select('user_id, title')
+    .select('user_id, title, report_number')
     .eq('id', id)
     .single();
 
@@ -122,7 +123,7 @@ export async function POST(
       'new_comment',
       'Koment i Ri',
       `Keni një koment të ri në raportimin "${report.title}"`,
-      `/reports/${id}`
+      getReportPublicPath(report.report_number)
     );
   }
 

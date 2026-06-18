@@ -21,9 +21,16 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: settings.site_title,
     description: settings.site_description,
-    ...(settings.favicon_url
-      ? { icons: { icon: settings.favicon_url, shortcut: settings.favicon_url } }
-      : {}),
+    icons: {
+      icon: [
+        { url: '/icon', sizes: '32x32', type: 'image/png' },
+        ...(settings.favicon_url
+          ? [{ url: settings.favicon_url, sizes: 'any' as const }]
+          : []),
+      ],
+      shortcut: '/icon',
+      apple: '/apple-icon',
+    },
   };
 }
 

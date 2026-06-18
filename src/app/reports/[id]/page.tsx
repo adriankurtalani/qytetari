@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
+import type { Metadata } from 'next';
 import { MapPin, ArrowLeft, Building2, User, History } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@/components/ui/Badge';
@@ -16,6 +17,7 @@ import { RelatedReportsSection } from '@/components/reports/RelatedReportsSectio
 import { getRelatedReportContext } from '@/lib/impact-stats';
 import { fetchReportByRouteParam } from '@/lib/report-lookup';
 import { formatReportLabel, isUuid } from '@/lib/report-url';
+import { getSiteSettings } from '@/lib/site-settings';
 import { REPORT_STATUS_LABELS, REPORT_STATUS_COLORS } from '@/lib/constants';
 import { formatDate, cn } from '@/lib/utils';
 import type { ReportStatus, Report } from '@/lib/types';
@@ -23,6 +25,54 @@ import { CitizenTrustBadge } from '@/components/profile/CitizenTrustBadge';
 
 interface ReportDetailProps {
   params: Promise<{ id: string }>;
+}
+
+type ReportMetadata = Pick<Report, 'report_number' | 'title' | 'description'> & {
+  photos?: { url: string }[];
+};
+
+export async function generateMetadata({ params }: ReportDetailProps): Promise<Metadata> {
+  const { id } = await params;
+  const supabase = await createClient();
+  const settings = await getSiteSettings();
+
+  const { data: report } = await fetchReportByRouteParam<ReportMetadata>(
+    supabase,
+    id,
+    'report_number, title, description, photos:report_photos(url)'
+  );
+
+  if (!report) {
+    return { title: 'Raporti nuk u gjet' };
+  }
+
+  const title = `${formatReportLabel(report.report_number)}: ${report.title}`;
+  const description =
+    report.description?.trim().slice(0, 200) ||
+    `${report.title} — raportim qytetar në ${settings.site_title}`;
+  const photoUrl = report.photos?.[0]?.url;
+  const pagePath = `/reports/${report.report_number}`;
+  const images = photoUrl ? [{ url: photoUrl, alt: report.title }] : undefined;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: pagePath,
+      type: 'article',
+      siteName: settings.site_title,
+      locale: 'sq_AL',
+      images,
+    },
+    twitter: {
+      card: photoUrl ? 'summary_large_image' : 'summary',
+      title,
+      description,
+      images: photoUrl ? [photoUrl] : undefined,
+    },
+  };
 }
 
 export default async function ReportDetailPage({ params }: ReportDetailProps) {

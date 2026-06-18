@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { ZoomIn } from 'lucide-react';
-import { PhotoFrame, PhotoLightbox, photoFrameRing } from '@/components/ui/PhotoDisplay';
+import { GalleryMainImage } from '@/components/reports/GalleryMainImage';
+import { PhotoLightbox, photoFrameRing } from '@/components/ui/PhotoDisplay';
 import { cn } from '@/lib/utils';
 
 interface Photo {
@@ -28,34 +29,32 @@ export function ReportPhotoGallery({ photos, title }: ReportPhotoGalleryProps) {
       <div className="border-b border-slate-100">
         {photos.length === 1 ? (
           <div className="group relative">
-            <PhotoFrame
+            <GalleryMainImage
               src={photos[0].url}
               alt={altBase}
-              variant="gallery"
               priority
-              onClick={() => setLightboxIndex(0)}
+              onOpenLightbox={() => setLightboxIndex(0)}
               className="rounded-none"
             />
-              <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs text-white backdrop-blur-sm md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+              <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs text-white backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <ZoomIn className="h-3.5 w-3.5" aria-hidden />
-                <span className="md:hidden">Prek për të zmadhuar</span>
+                <span className="md:hidden">Pinch ose prek për zmadhim</span>
                 <span className="hidden md:inline">Kliko për të zmadhuar</span>
               </div>
           </div>
         ) : (
           <div className="space-y-2.5 p-3 sm:p-4">
             <div className="group relative">
-              <PhotoFrame
+              <GalleryMainImage
                 src={activePhoto.url}
                 alt={`${altBase} — foto ${selectedIndex + 1}`}
-                variant="gallery"
                 priority
-                onClick={() => setLightboxIndex(selectedIndex)}
+                onOpenLightbox={() => setLightboxIndex(selectedIndex)}
                 className="rounded-xl"
               />
               <div className="pointer-events-none absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs text-white backdrop-blur-sm sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                 <ZoomIn className="h-3.5 w-3.5" aria-hidden />
-                <span className="sm:hidden">Prek për të zmadhuar</span>
+                <span className="sm:hidden">Pinch ose prek për zmadhim</span>
                 <span className="hidden sm:inline">Kliko për të zmadhuar</span>
               </div>
               <div className="pointer-events-none absolute top-3 right-3 rounded-full bg-black/55 px-2.5 py-1 text-xs text-white tabular-nums backdrop-blur-sm">

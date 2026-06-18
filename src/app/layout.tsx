@@ -4,6 +4,7 @@ import { Navbar } from '@/components/layout/Navbar';
 import { Footer } from '@/components/layout/Footer';
 import { SiteSettingsProvider } from '@/components/providers/SiteSettingsProvider';
 import { getSiteSettings } from '@/lib/site-settings';
+import { getAppBaseUrl } from '@/lib/app-url';
 import './globals.css';
 
 const geistSans = Geist({
@@ -19,8 +20,17 @@ const geistMono = Geist_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
   return {
+    metadataBase: new URL(getAppBaseUrl()),
     title: settings.site_title,
     description: settings.site_description,
+    openGraph: {
+      siteName: settings.site_title,
+      locale: 'sq_AL',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+    },
     icons: {
       icon: [
         { url: '/icon', sizes: '32x32', type: 'image/png' },
@@ -48,7 +58,11 @@ export default async function RootLayout({
   const settings = await getSiteSettings();
 
   return (
-    <html lang="sq" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="sq"
+      data-scroll-behavior="smooth"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+    >
       <body className="min-h-dvh flex flex-col overflow-x-hidden">
         <SiteSettingsProvider settings={settings}>
           <Navbar />
